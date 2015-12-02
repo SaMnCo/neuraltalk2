@@ -45,6 +45,7 @@ cmd:option('-backend', 'cudnn', 'nn|cudnn')
 cmd:option('-id', 'evalscript', 'an id identifying this run/job. used only if language_eval = 1 for appending to intermediate files')
 cmd:option('-seed', 123, 'random number generator seed to use')
 cmd:option('-gpuid', 0, 'which gpu to use. -1 = use CPU')
+cmd:option('-ascii', 0, 'if model should be loaded as ascii. 1 = ascii mode')
 cmd:text()
 
 -------------------------------------------------------------------------------
@@ -66,7 +67,11 @@ end
 -- Load the model checkpoint to evaluate
 -------------------------------------------------------------------------------
 assert(string.len(opt.model) > 0, 'must provide a model')
-local checkpoint = torch.load(opt.model)
+if opt.ascii ~= 1 then
+  local checkpoint = torch.load(opt.model)
+else
+  local checkpoint = torch.load(opt.model, 'ascii')
+end  
 -- override and collect parameters
 if string.len(opt.input_h5) == 0 then opt.input_h5 = checkpoint.opt.input_h5 end
 if string.len(opt.input_json) == 0 then opt.input_json = checkpoint.opt.input_json end
