@@ -66,11 +66,24 @@ end
 -------------------------------------------------------------------------------
 -- Load the model checkpoint to evaluate
 -------------------------------------------------------------------------------
+local function load(filename)
+   local mode = 'binary'
+   local referenced = true
+   local file = torch.DiskFile(filename, 'r')
+   file[mode](file)
+   file:referenced(referenced)
+   file:longSize(8)
+   file:littleEndianEncoding()
+   local object = file:readObject()
+   file:close()
+   return object
+end
+
 assert(string.len(opt.model) > 0, 'must provide a model')
 if opt.ascii ~= 1 then
-  local checkpoint = torch.load(opt.model)
+  local checkpoint = load(opt.model)
 else
-  local checkpoint = torch.load(opt.model, 'ascii')
+  local checkpoint = load(opt.model, 'ascii')
 end  
 -- override and collect parameters
 if string.len(opt.input_h5) == 0 then opt.input_h5 = checkpoint.opt.input_h5 end
