@@ -64,7 +64,9 @@ function download_image() {
       echo "Adding caption for line ${ID} to ${OUTPUT}"
       cat "${OUTPUT}" | jq ". + [ {\"captions\": [ \"${CAPTION}\" ], \"id\": \"${IMAGE_ID}\", \"file_path\": \"${IMAGE_PATH}\", \"url\": \"${IMAGE}\", \"image_id\": \"${FLICKR_ID}\"  }]" > /tmp/tmp.file.${ID} && \
       mv /tmp/tmp.file.${ID} "${OUTPUT}"
-    fi  
+    fi
+  else 
+    echo "Image ${IMAGE} already there. Passing by"
   fi
 }
 
@@ -78,7 +80,7 @@ function download_thread() {
 
   local START=$(expr ${START_IMAGE} + ${THREAD} \* ${IMAGES_PER_THREAD} + 1)
   local END=$(expr ${START_IMAGE} + $(expr ${THREAD} + 1 ) \* ${IMAGES_PER_THREAD})
-  echo $(seq ${START} 1 ${END})
+
   for image in $(seq ${START} 1 ${END})
   do 
     download_image ${image} "${TARGET_PATH}/${OUTPUT}"
@@ -121,7 +123,9 @@ wait
 echo "Done waiting for threads"
 
 echo "Combining all datasets now"
-jq -s add "${TARGET_PATH}"/im2text.*.json > "${TARGET_PATH}/${DATASET}.json"
+[ -f "${TARGET_PATH}/${DATASET}.json" ] || echo "[]" > "${TARGET_PATH}/${DATASET}.json"
+jq -s add "${TARGET_PATH}/${DATASET}.json" "${TARGET_PATH}"/im2text.*.json > /tmp/final.json \
+  && mv /tmp/final.json "${TARGET_PATH}/${DATASET}.json"
 
 echo "Removing Temporary JSON files"
 find  "${TARGET_PATH}" -name "im2text.*.json" -exec mv {} /tmp/ \;
